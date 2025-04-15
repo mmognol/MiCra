@@ -25,7 +25,7 @@ using int64_t = long long int;
 using uint8_t = unsigned char;
 using uint16_t = unsigned short int;
 using uint32_t = unsigned int;
-using uint64_t = unsigned long int;
+using uint64_t = unsigned long long int;
 
 /* Small types */
  
@@ -34,14 +34,14 @@ using uint64_t = unsigned long int;
 using int_least8_t = signed char;
 using int_least16_t = short int;
 using int_least32_t = int;
-using int_least64_t = long int;
+using int_least64_t = long long int;
 
 /* Unsigned */
 
 using uint_least8_t = unsigned char;
 using uint_least16_t = unsigned short int;
 using uint_least32_t = unsigned int;
-using uint_least64_t = unsigned long int;
+using uint_least64_t = unsigned long long int;
 
 /* Fast types */
 
@@ -50,14 +50,14 @@ using uint_least64_t = unsigned long int;
 using int_fast8_t = signed char;
 using int_fast16_t = int;
 using int_fast32_t = int;
-using int_fast64_t = long int;
+using int_fast64_t = long long int;
 
 /* Unsigned */
 
 using uint_fast8_t = unsigned char;
 using uint_fast16_t = unsigned int;
 using uint_fast32_t = unsigned int;
-using uint_fast64_t = unsigned long int;
+using uint_fast64_t = unsigned long long int;
 
 /* Types for void* pointers */
 
