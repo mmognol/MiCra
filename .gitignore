@@ -30,5 +30,5 @@
 *.exe
 *.out
 *.app
+*.dpu
 app/test_rrip/test
-app/test_rrip/dpu/add_in_vecteur.dpu
