@@ -84,7 +84,7 @@ template <uint32_t N>
     asm volatile(
         "sdma %[WRAM], %[MRAM], %[IMM]"
         : /* No output operands */
-        : [ WRAM ] "r"(to), [ MRAM ] "r"(from), [ IMM ] "i"(imm)
+        : [ WRAM ] "r"(from), [ MRAM ] "r"(to), [ IMM ] "i"(imm)
         : "memory" // Clobbers memory
     );
 }
