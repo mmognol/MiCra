@@ -49,21 +49,17 @@
 constexpr uint32_t MAX_MRAM_BYTES = 2048;
 constexpr uint32_t MRAM_ALIGNMENT_BYTES = 8;
 
+template <uint32_t N>
+concept MramTransferSize = 
+    (N != 0) &&
+    (N <= MAX_MRAM_BYTES) &&
+    (N % MRAM_ALIGNMENT_BYTES == 0);
 
-template <uint32_t N> // Use std::size_t for sizes
-[[maybe_unused]] static inline void mram_read(const __mram_ptr void *from, void *to) {
-    // --- Compile-time checks using standard static_assert ---
-    static_assert(N != 0, "mram_read: N (number of bytes) cannot be 0.");
-    static_assert(N <= MAX_MRAM_BYTES, "mram_read: N (number of bytes) cannot exceed 2048.");
-    static_assert(N % MRAM_ALIGNMENT_BYTES == 0, "mram_read: N (number of bytes) must be a multiple of 8.");
 
-    // --- Compiler hint (GCC/Clang specific) ---
-    // We know the conditions are met because of static_assert,
-    // but __builtin_assume can still help the optimizer.
-    #if defined(__GNUC__) || defined(__clang__)
-    __builtin_assume(N >= MRAM_ALIGNMENT_BYTES && N <= MAX_MRAM_BYTES && N % MRAM_ALIGNMENT_BYTES == 0);
-    #endif
-
+template <uint32_t N>
+    requires MramTransferSize<N>
+[[maybe_unused]] static inline void mram_read(const __mram_ptr void *from, void *to)
+{
     // --- Calculate immediate value for the ldma instruction ---
     // Assumes ldma immediate encodes (number_of_8_byte_blocks - 1)
     // Max N = 2048 => (2048/8)-1 = 256-1 = 255. Fits in uint8_t.
@@ -79,17 +75,10 @@ template <uint32_t N> // Use std::size_t for sizes
     );
 }
 
-template <uint32_t N> // Use std::size_t for sizes
-[[maybe_unused]] static inline void mram_write(const void *from, __mram_ptr void *to) {
-    // --- Compile-time checks using standard static_assert ---
-    static_assert(N != 0, "mram_read: N (number of bytes) cannot be 0.");
-    static_assert(N <= MAX_MRAM_BYTES, "mram_read: N (number of bytes) cannot exceed 2048.");
-    static_assert(N % MRAM_ALIGNMENT_BYTES == 0, "mram_read: N (number of bytes) must be a multiple of 8.");
-
-    #if defined(__GNUC__) || defined(__clang__)
-    __builtin_assume(N >= MRAM_ALIGNMENT_BYTES && N <= MAX_MRAM_BYTES && N % MRAM_ALIGNMENT_BYTES == 0);
-    #endif
-
+template <uint32_t N>
+    requires MramTransferSize<N>
+[[maybe_unused]] static inline void mram_write(const void *from, __mram_ptr void *to)
+{
     constexpr auto imm = static_cast<uint8_t>((N >> 3) - 1);
 
     asm volatile(
