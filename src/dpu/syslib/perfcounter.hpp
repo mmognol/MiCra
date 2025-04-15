@@ -1,6 +1,8 @@
 #ifndef B7D76A7E_C31B_40F7_B0E6_B12FACA3076C
 #define B7D76A7E_C31B_40F7_B0E6_B12FACA3076C
 
+#include "stdint.hpp"
+
 /**
  * @typedef perfcounter_t
  * @brief A value which can be stored by the performance counter.
@@ -41,9 +43,12 @@ auto perfcounter_get() -> perfcounter_t
  
 #ifndef DPU_PROFILING
 
+constexpr uint32_t PROFILE_INSTRUCTIONS = 5;
+constexpr uint32_t PROFILE_CYCLES = 3;
+
 void perfcounter_config(bool instructions = false)
 {
-    uint32_t config = instructions ? 5 : 3;
+    uint32_t config = instructions ? PROFILE_INSTRUCTIONS : PROFILE_CYCLES;
     uint32_t tmp = 0;
 
     asm volatile(
