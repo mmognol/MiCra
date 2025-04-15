@@ -1,11 +1,8 @@
 #ifndef B9836319_6265_4644_8B8E_31AF30E16F3A
 #define B9836319_6265_4644_8B8E_31AF30E16F3A
 
-extern "C"
-{
-#include <mram.h>
-}
 
+#include "mram.hpp"
 #include "wram_aligned.hpp"
 
 #ifndef NR_TASKLETS
