@@ -6,7 +6,7 @@ extern "C"
 #include <mram.h>
 }
 
-#include "WramAligned.hpp"
+#include "wram_aligned.hpp"
 
 #ifndef NR_TASKLETS
 #define NR_TASKLETS 16
