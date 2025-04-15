@@ -17,6 +17,7 @@ int main()
     
     std::vector<uint64_t> hits(16);
     std::vector<uint64_t> misses(16);
+    std::vector<uint64_t> perfcount(16);
 
     std::vector<uint64_t> arr(500000);
 
@@ -36,6 +37,9 @@ int main()
 
             DPU_ASSERT(dpu_prepare_xfer(dpu, &misses[0]));
             DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "misses", 0, 16*sizeof(uint64_t), DPU_XFER_ASYNC));
+
+            DPU_ASSERT(dpu_prepare_xfer(dpu, &perfcount[0]));
+            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "perfcount", 0, 16*sizeof(uint64_t), DPU_XFER_ASYNC));
         }
     }
 
@@ -57,6 +61,11 @@ int main()
     printf("arr[5]: %lu\n", arr[5]);
     printf("arr[6]: %lu\n", arr[6]);
     printf("arr[7]: %lu\n", arr[7]);
+
+    for(uint32_t i = 0; i < 16; ++i)
+    {
+        printf("Perfcount on DPU %u: %lu\n", i, perfcount[i]);
+    }
 
 
     return 0;
