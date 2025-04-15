@@ -1,0 +1,2 @@
+Checks: 'clang-analyzer-*,modernize-*,performance-*,bugprone-*,-bugprone-reserved-identifier,readability-*,-readability-braces-around-statements'
+WarningsAsErrors: '*'

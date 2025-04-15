@@ -2,7 +2,7 @@
 #define B9836319_6265_4644_8B8E_31AF30E16F3A
 
 
-#include "mram.hpp"
+#include "syslib/mram.hpp"
 #include "wram_aligned.hpp"
 
 #ifndef NR_TASKLETS
@@ -22,7 +22,7 @@ struct MramCache
 
     inline explicit MramCache(__mram_ptr T *ptr) : mram_ptr(ptr) {}
 
-    inline T &operator[](uint32_t i)
+    inline auto operator[](uint32_t i) -> T &
     {
         int id = i / S;
         int idx = i % S;
@@ -31,8 +31,9 @@ struct MramCache
         {
             auto *ptr = mram_ptr;
             if (block_id != -1)
-                mram_write(cache.buffer, ptr + block_id * S, S * sizeof(T));
-            mram_read(ptr + id * S, cache.buffer, S * sizeof(T));
+                mram_write<S * sizeof(T)>(cache.buffer, ptr + block_id * S);
+            
+            mram_read<S * sizeof(T)>(ptr + id * S, cache.buffer);
             block_id = id;
         }
 
@@ -42,13 +43,13 @@ struct MramCache
     inline void push()
     {
         if (block_id != -1)
-            mram_write(cache.buffer, mram_ptr + block_id * S, S * sizeof(T));
+            mram_write<S * sizeof(T)>(cache.buffer, mram_ptr + block_id * S);
     }
 
     inline void pull()
     {
         if (block_id != -1)
-            mram_read(mram_ptr + block_id * S, cache.buffer, S * sizeof(T));
+            mram_read<S * sizeof(T)>(mram_ptr + block_id * S, cache.buffer);
     }
 
     inline void swap(uint32_t i, uint32_t j) noexcept

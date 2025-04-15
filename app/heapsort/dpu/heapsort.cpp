@@ -1,22 +1,13 @@
-extern "C"
-{
-#define _Bool bool
-#include <defs.h>
-#include <perfcounter.h>
-#include <profiling.h>
-}
 
-#include "../../src/dpu/mram_cache.hpp"
-// #include "MramDoubleCache.hpp"
+#include "../../../src/dpu/micra.hpp"
+#include "../../../src/dpu/mram_cache.hpp"
 
 #define ARR_SIZE 524288UL
 
 constexpr int32_t CACHE_SIZE = 4;
 
-PROFILING_INIT(heap_prof);
-PROFILING_INIT(sift_prof);
-
-__mram_noinit int32_t g_arr[16 * ARR_SIZE];
+constexpr uint32_t NUM_PARTITIONS = 16;
+__mram_noinit int32_t g_arr[NUM_PARTITIONS * ARR_SIZE]; // NOLINT(modernize-avoid-c-arrays)
 
 struct span
 {
@@ -31,17 +22,17 @@ struct Range
     T end;
 };
 
-inline uint32_t iParent(uint32_t i)
+inline auto iParent(uint32_t i) -> uint32_t
 {
     return i / 2;
 }
 
-inline uint32_t iLeftChild(uint32_t i)
+inline auto iLeftChild(uint32_t i) -> uint32_t
 {
     return 2 * i + 1;
 }
 
-inline uint32_t iRightChild(uint32_t i)
+inline auto iRightChild(uint32_t i) -> uint32_t
 {
     return 2 * i + 2;
 }
@@ -90,14 +81,10 @@ inline void heapSort(span a)
 
     while (end > 0)
     {
-        profiling_start(&heap_prof);
         cache.swap(end, 0);
-        profiling_stop(&heap_prof);
 
         end--;
-        profiling_start(&sift_prof);
         siftDown(cache, 0, end);
-        profiling_stop(&sift_prof);
     }
 
     cache.push();
@@ -105,15 +92,9 @@ inline void heapSort(span a)
 
 __mram uint64_t perf = 0;
 
-int main()
+auto main() -> int
 {
-    if (me() == 0)
-        perfcounter_config(COUNT_INSTRUCTIONS, true);
-
     heapSort((struct span){.ptr = g_arr + me() * ARR_SIZE, .size = ARR_SIZE});
-
-    if (me() == 0)
-        perf = perfcounter_get();
 
     return 0;
 }
