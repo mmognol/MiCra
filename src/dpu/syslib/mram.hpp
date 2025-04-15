@@ -50,14 +50,14 @@ constexpr uint32_t MAX_MRAM_BYTES = 2048;
 constexpr uint32_t MRAM_ALIGNMENT_BYTES = 8;
 
 template <uint32_t N>
-concept MramTransferSize = 
+concept is_mram_transfer_size = 
     (N != 0) &&
     (N <= MAX_MRAM_BYTES) &&
     (N % MRAM_ALIGNMENT_BYTES == 0);
 
 
 template <uint32_t N>
-    requires MramTransferSize<N>
+    requires is_mram_transfer_size<N>
 [[maybe_unused]] static inline void mram_read(const __mram_ptr void *from, void *to)
 {
     // --- Calculate immediate value for the ldma instruction ---
@@ -76,7 +76,7 @@ template <uint32_t N>
 }
 
 template <uint32_t N>
-    requires MramTransferSize<N>
+    requires is_mram_transfer_size<N>
 [[maybe_unused]] static inline void mram_write(const void *from, __mram_ptr void *to)
 {
     constexpr auto imm = static_cast<uint8_t>((N >> 3) - 1);
