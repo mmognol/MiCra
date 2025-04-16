@@ -1,19 +1,8 @@
 #ifndef A3E8434A_BD6F_4C9B_960F_F37CCD57BF10
 #define A3E8434A_BD6F_4C9B_960F_F37CCD57BF10
-#ifndef AF0CA521_5AC5_45EB_A646_463406E46EB0
-#define AF0CA521_5AC5_45EB_A646_463406E46EB0
 
 #include "syslib/mram.hpp"
 #include "wram_aligned.hpp"
-
-extern "C"
-{
-#define _Bool bool
-#include <profiling.h>
-}
-
-PROFILING_INIT(sec1_prof);
-PROFILING_INIT(sec2_prof);
 
 // DPU have 64MB of MRAM, the minimal pointer size is 26 bits.
 // DPU have 16 hardware threads, and a WRAM of 64KB.
@@ -38,7 +27,7 @@ class RRIPCache
     uint64_t hits = 0;
     uint64_t misses = 0;
 
-    uint32_t count_line_touch[8]{};
+    uint32_t count_line_touch[NumLine]{}; // NOLINT(modernize-avoid-c-arrays)
 
     __dma_aligned uint8_t RRPV[NumLine]{}; // 3 bits for the RRPV NOLINT(modernize-avoid-c-arrays)
     __mram_ptr uint64_t* LinePtr[NumLine]{}; // NOLINT(modernize-avoid-c-arrays)
@@ -71,18 +60,18 @@ public:
         return count_line_touch[i];
     }
 
-    auto hit(__mram_ptr uint64_t *ptr) -> uint64_t *
+    auto hit(uintptr_t ptr) -> uintptr_t
     {
         for (uint32_t i = 0; i < NumLine; ++i)
         {
-            if (LinePtr[i] == ptr)
+            if ((uintptr_t)LinePtr[i] == ptr)
             {
                 hits++;
                 RRPV[i] = 0;
-                return &cache_data[i * LineSize];
+                return (uintptr_t)&cache_data[i * LineSize];
             }
         }
-        return nullptr;
+        return UINTPTR_MAX;
     }
 
     auto max_RRPV_index() -> uint32_t
@@ -126,8 +115,8 @@ public:
 
     void increase_RRPV()
     {
-        for(uint32_t i = 0; i < NumLine; ++i)
-            RRPV[i] += 1;
+        for(uint8_t & i : RRPV)
+            i += 1;
     }
     
     /*auto next_max_RRPV() -> uint32_t
@@ -151,7 +140,7 @@ public:
         uint32_t i = 0;
         uint32_t rrpv_low = *(uint32_t*)RRPV;
         uint32_t rrpv_high = *((uint32_t*)RRPV+1);
-        uint32_t mask = 0x08080808;
+        constexpr uint32_t mask = 0x08080808;
 
         // Use count leading zeros
         uint32_t cmp = 0;
@@ -179,11 +168,11 @@ public:
         mram_write<LineSize*sizeof(uint64_t)>(&cache_data[i * LineSize], LinePtr[i]);
     }
 
-    void insert_line(uint32_t i, __mram_ptr uint64_t *ptr)
+    void insert_line(uint32_t i, uintptr_t ptr)
     {
-        LinePtr[i] = ptr;
+        LinePtr[i] = (__mram_ptr uint64_t *) ptr;
         RRPV[i] = MaxRRPV-3;
-        mram_read<LineSize*sizeof(uint64_t)>(ptr, &cache_data[i * LineSize]);
+        mram_read<LineSize*sizeof(uint64_t)>(LinePtr[i], &cache_data[i * LineSize]);
     }
 
     auto get_new_line() -> uint32_t
@@ -199,17 +188,13 @@ public:
         return next_max_RRPV();
     }
 
-    auto get_line_ptr(__mram_ptr uint64_t *ptr) -> uint64_t *
+    auto get_line_ptr(uintptr_t ptr) -> uintptr_t
     {
-        profiling_start(&sec1_prof);
 
-        ptr = (__mram_ptr uint64_t *)((uintptr_t)ptr & ~(uintptr_t)Mask);
-        if(uint64_t * res = hit(ptr); res != nullptr){
-            profiling_stop(&sec1_prof);
+        ptr = ptr & ~(uintptr_t)Mask;
+        if(uintptr_t res = hit(ptr); res != UINTPTR_MAX){
             return res;
         }
-        profiling_stop(&sec1_prof);
-
 
         misses++;
         auto line = get_new_line();
@@ -217,21 +202,29 @@ public:
         if(LinePtr[line] != nulline)
             evict_line(line);
         insert_line(line, ptr);
-        return &cache_data[line * LineSize];
+        return (uintptr_t)&cache_data[line * LineSize];
     }
 
-    auto get_value(__mram_ptr uint64_t *ptr) -> uint64_t
+    template<typename T>
+    auto remove_ptr_type(__mram_ptr T *ptr) -> uintptr_t
     {
-        auto line = get_line_ptr(ptr);
-        uintptr_t offset = (uintptr_t)ptr & (uintptr_t)Mask;
-        return *(line + offset / sizeof(uint64_t));
+        return (uintptr_t)ptr;
     }
 
-    auto set_value(__mram_ptr uint64_t *ptr, uint64_t value) -> void
+    template<typename T>
+    auto get_value(__mram_ptr T *ptr) -> T
     {
-        auto line = get_line_ptr(ptr);
+        auto line = get_line_ptr(remove_ptr_type(ptr));
         uintptr_t offset = (uintptr_t)ptr & (uintptr_t)Mask;
-        line[offset / sizeof(uint64_t)] = value;
+        return *(T*)(line + offset);
+    }
+
+    template<typename T>
+    auto set_value(__mram_ptr T *ptr, T value) -> void
+    {
+        auto line = get_line_ptr(remove_ptr_type(ptr));
+        uintptr_t offset = (uintptr_t)ptr & (uintptr_t)Mask;
+        *((T*)(line + offset)) = value;
     }
 
     auto get_hits() -> uint64_t
@@ -244,8 +237,5 @@ public:
         return misses;
     }
 };
-
-#endif /* AF0CA521_5AC5_45EB_A646_463406E46EB0 */
-
 
 #endif /* A3E8434A_BD6F_4C9B_960F_F37CCD57BF10 */
