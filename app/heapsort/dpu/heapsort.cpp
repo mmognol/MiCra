@@ -2,7 +2,7 @@
 #include "../../../src/dpu/micra.hpp"
 #include "../../../src/dpu/mram_cache.hpp"
 
-#include "../../../src/dpu/rrip4_cache.hpp"
+#include "../../../src/dpu/rrip8_cache.hpp"
 
 #define ARR_SIZE 524288UL
 constexpr uint32_t RripCacheSize = 8;
