@@ -1,11 +1,17 @@
+#include "../../../src/dpu/syslib/perfcounter.hpp"
 
 #include "../../../src/dpu/micra.hpp"
 #include "../../../src/dpu/mram_cache.hpp"
 
-#include "../../../src/dpu/rrip8_cache.hpp"
+#include "../../../src/dpu/rrip4_cache.hpp"
 
 #define ARR_SIZE 524288UL
 constexpr uint32_t RripCacheSize = 8;
+
+__host uint32_t hits[NR_TASKLETS]; // NOLINT(modernize-avoid-c-arrays)
+__host uint32_t misses[NR_TASKLETS]; // NOLINT(modernize-avoid-c-arrays)
+
+__host uint64_t perfcount[NR_TASKLETS]; // NOLINT(modernize-avoid-c-arrays)
 
 constexpr int32_t CACHE_SIZE = 4;
 
@@ -95,13 +101,16 @@ inline void heapSort(span a)
         end--;
         siftDown(rrip_cache, a, 0, end);
     }
+
+    hits[me()] = rrip_cache.get_hits();
+    misses[me()] = rrip_cache.get_misses();
 }
 
 __mram uint64_t perf = 0;
 
 auto main() -> int
 {
-    heapSort((struct span){.ptr = g_arr + me() * ARR_SIZE, .size = ARR_SIZE});
+    heapSort((struct span){.ptr = g_arr + me() * ARR_SIZE, .size = ARR_SIZE/2});
 
     return 0;
 }

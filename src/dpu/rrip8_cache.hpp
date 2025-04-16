@@ -24,8 +24,8 @@ class RRIPCache
 
     static constexpr uint32_t Mask = LineSize*8 - 1;
 
-    uint64_t hits = 0;
-    uint64_t misses = 0;
+    uint32_t hits = 0;
+    uint32_t misses = 0;
 
     uint32_t count_line_touch[NumLine]{}; // NOLINT(modernize-avoid-c-arrays)
 
@@ -227,12 +227,12 @@ public:
         *((T*)(line + offset)) = value;
     }
 
-    auto get_hits() -> uint64_t
+    auto get_hits() -> uint32_t
     {
         return hits;
     }
 
-    auto get_misses() -> uint64_t
+    auto get_misses() -> uint32_t
     {
         return misses;
     }

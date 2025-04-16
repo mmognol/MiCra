@@ -31,7 +31,7 @@ bool check_result(const std::vector<T>& arr)
     {
         if(arr[i] != expected[i])
         {
-            printf("Error at index %u: expected %lu, got %lu\n", i, expected[i], arr[i]);
+            printf("Error at index %u: expected %u, got %u\n", i, expected[i], arr[i]);
             return false;
         }
     }
@@ -54,8 +54,8 @@ int main()
     std::chrono::duration<double> elapsed = end - start;
     printf("DPU run time: %.6f seconds\n\n", elapsed.count());
     
-    std::vector<uint64_t> hits(16);
-    std::vector<uint64_t> misses(16);
+    std::vector<uint32_t> hits(16);
+    std::vector<uint32_t> misses(16);
     std::vector<uint64_t> perfcount(16);
     std::vector<uint32_t> ltouch(16*8);
 
@@ -72,11 +72,11 @@ int main()
 
 
             DPU_ASSERT(dpu_prepare_xfer(dpu, &hits[0]));
-            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "hits", 0, 16*sizeof(uint64_t), DPU_XFER_ASYNC));
+            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "hits", 0, 16*sizeof(uint32_t), DPU_XFER_ASYNC));
 
 
             DPU_ASSERT(dpu_prepare_xfer(dpu, &misses[0]));
-            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "misses", 0, 16*sizeof(uint64_t), DPU_XFER_ASYNC));
+            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "misses", 0, 16*sizeof(uint32_t), DPU_XFER_ASYNC));
 
             DPU_ASSERT(dpu_prepare_xfer(dpu, &perfcount[0]));
             DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "perfcount", 0, 16*sizeof(uint64_t), DPU_XFER_ASYNC));
@@ -91,8 +91,8 @@ int main()
 
     for(uint32_t i = 0; i < 1; ++i)
     {
-        printf("Hit on DPU %u: %lu\n", i, hits[i]);
-        printf("Miss on DPU %u: %lu\n", i, misses[i]);
+        printf("Hit on DPU %u: %u\n", i, hits[i]);
+        printf("Miss on DPU %u: %u\n", i, misses[i]);
     }
     printf("\n");
 

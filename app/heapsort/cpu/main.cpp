@@ -149,6 +149,34 @@ std::filesystem::path parse_dpu_filename(int argc, char *argv[])
     return dpu_path;
 }
 
+auto get_stat_from_dpu(dpu_set_t& dpus) -> std::tuple<std::vector<uint32_t>, std::vector<uint32_t>, std::vector<uint64_t>>
+{
+    dpu_set_t dpu{};
+    uint64_t each_dpu = 0;
+
+    std::vector<uint32_t> hits(16);
+    std::vector<uint32_t> misses(16);
+    std::vector<uint64_t> perfcount(16);
+
+    DPU_FOREACH(dpus, dpu, each_dpu)
+    {
+        if(each_dpu == 0)
+        {
+            DPU_ASSERT(dpu_prepare_xfer(dpu, &hits[0]));
+            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "hits", 0, 16*sizeof(uint32_t), DPU_XFER_DEFAULT));
+
+
+            DPU_ASSERT(dpu_prepare_xfer(dpu, &misses[0]));
+            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "misses", 0, 16*sizeof(uint32_t), DPU_XFER_DEFAULT));
+
+            DPU_ASSERT(dpu_prepare_xfer(dpu, &perfcount[0]));
+            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "perfcount", 0, 16*sizeof(uint64_t), DPU_XFER_DEFAULT));
+        }
+    }
+
+    return {hits, misses, perfcount};
+}
+
 int main(int argc, char *argv[])
 {
     auto dpu_filename = parse_dpu_filename(argc, argv);
@@ -174,6 +202,7 @@ int main(int argc, char *argv[])
 
     send_to_dpu(dpus, V);
     launch_dpu(dpus);
+    const auto &[hits, misses, perfcount] = get_stat_from_dpu(dpus);
     gather_from_dpu(dpus, V);
     dpu_sync(dpus);
     dpu_free(dpus);
@@ -181,6 +210,24 @@ int main(int argc, char *argv[])
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     printf("Elapsed time: %.6f seconds\n", elapsed.count());
+
+    printf("Hit on DPU: ");
+    for (const auto &hit : hits)
+    {
+        printf("%u ", hit);
+    }
+    printf("\n");
+    printf("Miss on DPU: ");
+    for (const auto &miss : misses)
+    {
+        printf("%u ", miss);
+    }
+    printf("\n");
+    printf("Perf on DPU: ");
+    for (const auto &perf : perfcount)
+    {
+        printf("%lu ", perf);
+    }
 
     test_if_sorted(V);
 

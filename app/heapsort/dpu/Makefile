@@ -4,7 +4,7 @@ CC := dpu-upmem-dpurte-clang
 
 # Compiler Flags for DPU C++
 # Renamed FLAGSP to DPU_CXXFLAGS for clarity and convention
-DPU_CXXFLAGS := -std=gnu++20 -O3 -fno-builtin -DNR_TASKLETS=16 -fno-rtti -fno-exceptions
+DPU_CXXFLAGS := -pg -std=gnu++20 -O3 -fno-builtin -DNR_TASKLETS=16 -fno-rtti -fno-exceptions
 
 # Source Files
 SRC_MAIN := heapsort.cpp

@@ -1,10 +1,16 @@
 
 #include "../../../src/dpu/micra.hpp"
 #include "../../../src/dpu/mram_cache.hpp"
+#include "../../../src/dpu/syslib/perfcounter.hpp"
 
 #define ARR_SIZE 524288UL
 
 constexpr int32_t CACHE_SIZE = 4;
+
+__host uint32_t hits[NR_TASKLETS]; // NOLINT(modernize-avoid-c-arrays)
+__host uint32_t misses[NR_TASKLETS]; // NOLINT(modernize-avoid-c-arrays)
+
+__host uint64_t perfcount[NR_TASKLETS]; // NOLINT(modernize-avoid-c-arrays)
 
 constexpr uint32_t NUM_PARTITIONS = 16;
 __mram_noinit int32_t g_arr[NUM_PARTITIONS * ARR_SIZE]; // NOLINT(modernize-avoid-c-arrays)
@@ -90,10 +96,9 @@ inline void heapSort(span a)
     cache.push();
 }
 
-__mram uint64_t perf = 0;
-
 auto main() -> int
 {
+
     heapSort((struct span){.ptr = g_arr + me() * ARR_SIZE, .size = ARR_SIZE});
 
     return 0;

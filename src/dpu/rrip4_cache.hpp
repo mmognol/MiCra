@@ -4,6 +4,15 @@
 #include "syslib/mram.hpp"
 #include "wram_aligned.hpp"
 
+/*
+extern "C"
+{
+#include <profiling.h>
+}
+
+PROFILING_INIT(set_val);
+PROFILING_INIT(get_val);
+*/
 
 // DPU have 64MB of MRAM, the minimal pointer size is 26 bits.
 // DPU have 16 hardware threads, and a WRAM of 64KB.
@@ -25,8 +34,8 @@ class RRIPCache
 
     static constexpr uint32_t Mask = LineSize*8 - 1;
 
-    uint64_t hits = 0;
-    uint64_t misses = 0;
+    uint32_t hits = 0;
+    uint32_t misses = 0;
 
     uint32_t count_line_touch[NumLine]{}; // NOLINT(modernize-avoid-c-arrays)
 
@@ -166,25 +175,29 @@ public:
     template<typename T>
     auto get_value(__mram_ptr T *ptr) -> T
     {
+        //profiling_start(&get_val);
         auto line = get_line_ptr(remove_ptr_type(ptr));
         uintptr_t offset = (uintptr_t)ptr & (uintptr_t)Mask;
+        //profiling_stop(&get_val);
         return *(T*)(line + offset);
     }
 
     template<typename T>
     auto set_value(__mram_ptr T *ptr, T value) -> void
     {
+        //profiling_start(&set_val);
         auto line = get_line_ptr(remove_ptr_type(ptr));
         uintptr_t offset = (uintptr_t)ptr & (uintptr_t)Mask;
         *((T*)(line + offset)) = value;
+        //profiling_stop(&set_val);
     }
 
-    auto get_hits() -> uint64_t
+    auto get_hits() -> uint32_t
     {
         return hits;
     }
 
-    auto get_misses() -> uint64_t
+    auto get_misses() -> uint32_t
     {
         return misses;
     }
