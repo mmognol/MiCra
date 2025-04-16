@@ -8,9 +8,10 @@ extern "C"
 #include <string>
 
 
-std::vector<uint64_t> expected_result()
+template <typename T>
+std::vector<T> expected_result()
 {
-    std::vector<uint64_t> result(500000);
+    std::vector<T> result(500000);
     for(uint32_t i = 0; i < 500000; i+=4)
     {
         result[i] = i/4 + 1;
@@ -22,9 +23,10 @@ std::vector<uint64_t> expected_result()
     return result;
 }
 
-bool check_result(const std::vector<uint64_t>& arr)
+template<typename T>
+bool check_result(const std::vector<T>& arr)
 {
-    auto expected = expected_result();
+    auto expected = expected_result<T>();
     for(uint32_t i = 0; i < arr.size(); ++i)
     {
         if(arr[i] != expected[i])
@@ -36,6 +38,7 @@ bool check_result(const std::vector<uint64_t>& arr)
     return true;
 }
 
+using array_type = uint32_t;
 
 int main()
 {
@@ -56,7 +59,7 @@ int main()
     std::vector<uint64_t> perfcount(16);
     std::vector<uint32_t> ltouch(16*8);
 
-    std::vector<uint64_t> arr(500000);
+    std::vector<array_type> arr(500000);
 
     dpu_set_t dpu{};
     uint64_t each_dpu = 0;
@@ -65,7 +68,7 @@ int main()
         if(each_dpu == 0)
         {
             DPU_ASSERT(dpu_prepare_xfer(dpu, &arr[0]));
-            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "arrays", 0, 500000*sizeof(uint64_t), DPU_XFER_ASYNC));
+            DPU_ASSERT(dpu_push_xfer(dpu, DPU_XFER_FROM_DPU, "arrays", 0, 500000*sizeof(array_type), DPU_XFER_ASYNC));
 
 
             DPU_ASSERT(dpu_prepare_xfer(dpu, &hits[0]));
@@ -97,7 +100,12 @@ int main()
     if(!check_result(arr))
     {
         printf("Error: result is not correct\n");
-        return 1;
+        // print first 16 elements
+        for(uint32_t i = 0; i < 16; ++i)
+        {
+            printf(" %u", arr[i]);
+        }
+        printf("\n");
     }
     else
     {

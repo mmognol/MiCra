@@ -1,4 +1,4 @@
-#include "../../../src/dpu/rrip8_cache.hpp"
+#include "../../../src/dpu/rrip4_cache.hpp"
 #include "../../../src/dpu/syslib/defs.hpp"
 
 #include "../../../src/dpu/syslib/perfcounter.hpp"
@@ -8,13 +8,15 @@
 #define NR_TASKLETS 16
 #endif
 
+using array_type = uint32_t;
+
 constexpr uint32_t ARRAY_SIZE = 500'000;
 
 __mram uint64_t decalage; // NOLINT(modernize-avoid-c-arrays)
 
 
-__mram uint64_t arrays[NR_TASKLETS][ARRAY_SIZE]; // NOLINT(modernize-avoid-c-arrays)
-__mram uint64_t to_add[NR_TASKLETS][4]; // NOLINT(modernize-avoid-c-arrays)
+__mram array_type arrays[NR_TASKLETS][ARRAY_SIZE]; // NOLINT(modernize-avoid-c-arrays)
+__mram array_type to_add[NR_TASKLETS][4]; // NOLINT(modernize-avoid-c-arrays)
 
 
 __host uint64_t hits[NR_TASKLETS]; // NOLINT(modernize-avoid-c-arrays)
@@ -34,19 +36,19 @@ auto main() -> int
     constexpr uint32_t NbLines = 8;
     RRIPCache<8> my_cache;
 
-    uint64_t local_add[4] = {1, 1, 1, 8};
+    array_type local_add[4] = {1, 1, 1, 8};
 
-    my_cache.set_value(my_to_add, 1);
-    my_cache.set_value(my_to_add+1, 1);
-    my_cache.set_value(my_to_add+2, 1);
-    my_cache.set_value(my_to_add+3, 8);
+    my_cache.set_value(my_to_add, array_type(1));
+    my_cache.set_value(my_to_add+1, array_type(1));
+    my_cache.set_value(my_to_add+2, array_type(1));
+    my_cache.set_value(my_to_add+3, array_type(8));
 
     for(uint32_t i = 0; i < ARRAY_SIZE; i+=4)
     {
-        my_cache.set_value(my_array+i, local_add[0] +(i/4));
-        my_cache.set_value(my_array+i+1, local_add[1] +(i/4));
-        my_cache.set_value(my_array+i+2, local_add[2] +(i/4));
-        my_cache.set_value(my_array+i+3, local_add[3] +(i/4));
+        my_cache.set_value(my_array+i, local_add[0] +(i/4U));
+        my_cache.set_value(my_array+i+1, local_add[1] +(i/4U));
+        my_cache.set_value(my_array+i+2, local_add[2] +(i/4U));
+        my_cache.set_value(my_array+i+3, local_add[3] +(i/4U));
 
         /*my_cache.set_value(my_array+i, my_cache.get_value(my_to_add)+(i/4));
         my_cache.set_value(my_array+i+1, my_cache.get_value(my_to_add+1)+(i/4));
