@@ -32,3 +32,4 @@
 *.app
 *.dpu
 app/test_rrip/test
+app/heapsort/heapsort

@@ -2,10 +2,7 @@
 #include "../../../src/dpu/micra.hpp"
 #include "../../../src/dpu/mram_cache.hpp"
 
-#include "../../../src/dpu/rrip4_cache.hpp"
-
 #define ARR_SIZE 524288UL
-constexpr uint32_t RripCacheSize = 8;
 
 constexpr int32_t CACHE_SIZE = 4;
 
@@ -40,7 +37,7 @@ inline auto iRightChild(uint32_t i) -> uint32_t
     return 2 * i + 2;
 }
 
-inline void siftDown(RRIPCache<RripCacheSize>& cache, span arr, uint32_t start, uint32_t end)
+inline void siftDown(MramCache<int32_t, CACHE_SIZE> &a, uint32_t start, uint32_t end)
 {
     auto root = start;
 
@@ -49,52 +46,48 @@ inline void siftDown(RRIPCache<RripCacheSize>& cache, span arr, uint32_t start, 
         auto child = iLeftChild(root);
         auto next = root;
 
-        if ( cache.get_value(arr.ptr +next) <   cache.get_value(arr.ptr + child) )
+        if (a[next] < a[child])
             next = child;
 
-        if (child + 1 <= end && cache.get_value(arr.ptr +next) < cache.get_value(arr.ptr + child +1))
+        if (child + 1 <= end && a[next] < a[child + 1])
             next = child + 1;
 
         if (next == root)
             return;
 
-        auto tmp = cache.get_value(arr.ptr + root);
-        cache.set_value(arr.ptr + root, cache.get_value(arr.ptr + next));
-        cache.set_value(arr.ptr + next, tmp);
-
+        a.swap(root, next);
         root = next;
     }
 }
 
-inline void heapify(RRIPCache<RripCacheSize>& cache, span a)
+inline void heapify(MramCache<int32_t, CACHE_SIZE> &arr, uint32_t size)
 {
-    int start = static_cast<int>(iParent(a.size - 1));
+    int start = static_cast<int>(iParent(size - 1));
 
     while (start >= 0)
     {
-        siftDown(cache, a, start, a.size - 1);
+        siftDown(arr, start, size - 1);
         start--;
     }
 }
 
 inline void heapSort(span a)
 {
-    RRIPCache<RripCacheSize> rrip_cache;
+    MramCache<int32_t, CACHE_SIZE> cache{a.ptr};
 
-    heapify(rrip_cache, a);
+    heapify(cache, a.size);
 
     auto end = a.size - 1;
 
     while (end > 0)
     {
-        auto tmp = rrip_cache.get_value(a.ptr + end);
-        rrip_cache.set_value(a.ptr + end, rrip_cache.get_value(a.ptr));
-        rrip_cache.set_value(a.ptr, tmp);
-        // cache.swap(a.ptr + end, a.ptr);
+        cache.swap(end, 0);
 
         end--;
-        siftDown(rrip_cache, a, 0, end);
+        siftDown(cache, 0, end);
     }
+
+    cache.push();
 }
 
 __mram uint64_t perf = 0;
