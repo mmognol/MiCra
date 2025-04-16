@@ -19,7 +19,7 @@ TARGET_NOCACHE := heapsort_nocache.dpu
 .PHONY: all clean nocache
 
 # Default target: build the standard version
-all: $(TARGET_MAIN)
+all: $(TARGET_MAIN) $(TARGET_NOCACHE)
 
 # Target to build the no-cache version
 nocache: $(TARGET_NOCACHE)
