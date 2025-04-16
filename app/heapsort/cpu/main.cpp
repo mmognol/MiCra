@@ -134,11 +134,11 @@ std::filesystem::path parse_dpu_filename(int argc, char *argv[])
     std::filesystem::path dpu_path{argv[1]};
 
     const std::unordered_set<std::string> allowed_filenames = {
-        "countsort.dpu", "heapsort.dpu", "quicksort.dpu"};
+        "countsort.dpu", "heapsort.dpu", "quicksort.dpu", "heapsort_nocache.dpu"};
 
     if (allowed_filenames.find(dpu_path.filename().string()) == allowed_filenames.end())
     {
-        throw std::invalid_argument("Invalid filename. Allowed filenames are: countsort.dpu, heapsort.dpu, quicksort.dpu");
+        throw std::invalid_argument("Invalid filename. Allowed filenames are: countsort.dpu, heapsort_nocache.dpu, heapsort.dpu, quicksort.dpu");
     }
 
     if (!std::filesystem::exists(dpu_path))
